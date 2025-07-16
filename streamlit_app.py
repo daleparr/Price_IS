@@ -10,8 +10,5 @@ import os
 # Add the src directory to the Python path
 sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 
-# Import and run the main dashboard
-from dashboard.simple_app import main
-
-if __name__ == "__main__":
-    main()
+# Import the dashboard module - Streamlit will run it automatically
+import dashboard.simple_app
