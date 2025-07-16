@@ -14,8 +14,14 @@ logger = logging.getLogger(__name__)
 class DatabaseManager:
     """Manages SQLite database operations for the price tracker."""
     
-    def __init__(self, db_path: str = "data/price_tracker.db"):
-        self.db_path = db_path
+    def __init__(self, db_path: str = None):
+        # Use absolute path for Streamlit Cloud compatibility
+        if db_path is None:
+            # Get the absolute path to the project root
+            project_root = Path(__file__).parent.parent.parent
+            self.db_path = str(project_root / "data" / "price_tracker.db")
+        else:
+            self.db_path = db_path
         self.ensure_data_directory()
         
     def ensure_data_directory(self):
@@ -123,6 +129,20 @@ class DatabaseManager:
                     metric_value REAL,
                     metric_text TEXT,
                     recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            
+            # Scheduling Configuration Table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS schedule_config (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    schedule_enabled BOOLEAN DEFAULT 0,
+                    schedule_time TEXT, -- Time in HH:MM format
+                    schedule_timezone TEXT DEFAULT 'UTC',
+                    last_run TIMESTAMP,
+                    next_run TIMESTAMP,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
             
@@ -354,4 +374,107 @@ class DatabaseManager:
                 return cursor.rowcount > 0
         except Exception as e:
             print(f"Error removing URL: {e}")
+    
+    # Schedule Configuration Methods
+    def get_schedule_config(self) -> Dict[str, Any]:
+        """Get the current schedule configuration."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM schedule_config ORDER BY id DESC LIMIT 1")
+            result = cursor.fetchone()
+            if result:
+                return dict(result)
+            else:
+                # Return default configuration
+                return {
+                    'schedule_enabled': False,
+                    'schedule_time': '09:00',
+                    'schedule_timezone': 'UTC',
+                    'last_run': None,
+                    'next_run': None
+                }
+    
+    def update_schedule_config(self, enabled: bool, schedule_time: str = None, timezone: str = 'UTC') -> bool:
+        """Update the schedule configuration."""
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                
+                # Check if config exists
+                cursor.execute("SELECT id FROM schedule_config ORDER BY id DESC LIMIT 1")
+                existing = cursor.fetchone()
+                
+                if existing:
+                    # Update existing configuration
+                    if schedule_time:
+                        cursor.execute("""
+                            UPDATE schedule_config 
+                            SET schedule_enabled = ?, schedule_time = ?, schedule_timezone = ?, 
+                                updated_at = datetime('now')
+                            WHERE id = ?
+                        """, (enabled, schedule_time, timezone, existing[0]))
+                    else:
+                        cursor.execute("""
+                            UPDATE schedule_config 
+                            SET schedule_enabled = ?, updated_at = datetime('now')
+                            WHERE id = ?
+                        """, (enabled, existing[0]))
+                else:
+                    # Insert new configuration
+                    cursor.execute("""
+                        INSERT INTO schedule_config 
+                        (schedule_enabled, schedule_time, schedule_timezone, created_at, updated_at)
+                        VALUES (?, ?, ?, datetime('now'), datetime('now'))
+                    """, (enabled, schedule_time or '09:00', timezone))
+                
+                conn.commit()
+                return True
+        except Exception as e:
+            logger.error(f"Error updating schedule config: {e}")
+            return False
+    
+    def update_schedule_run_times(self, last_run: str = None, next_run: str = None) -> bool:
+        """Update the last and next run times for the schedule."""
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                
+                # Get or create schedule config
+                cursor.execute("SELECT id FROM schedule_config ORDER BY id DESC LIMIT 1")
+                existing = cursor.fetchone()
+                
+                if existing:
+                    cursor.execute("""
+                        UPDATE schedule_config 
+                        SET last_run = ?, next_run = ?, updated_at = datetime('now')
+                        WHERE id = ?
+                    """, (last_run, next_run, existing[0]))
+                else:
+                    cursor.execute("""
+                        INSERT INTO schedule_config 
+                        (schedule_enabled, schedule_time, last_run, next_run, created_at, updated_at)
+                        VALUES (0, '09:00', ?, ?, datetime('now'), datetime('now'))
+                    """, (last_run, next_run))
+                
+                conn.commit()
+                return True
+        except Exception as e:
+            logger.error(f"Error updating schedule run times: {e}")
+            return False
+    
+    def save_price_data(self, sku_id: int, retailer_id: int, price: float, 
+                       currency: str = 'GBP', in_stock: bool = True, 
+                       availability_text: str = None, product_title: str = None,
+                       raw_data: str = None) -> int:
+        """Save scraped price data to the database."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO price_history 
+                (sku_id, retailer_id, price, currency, in_stock, availability_text, 
+                 product_title, raw_data, scraped_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+            """, (sku_id, retailer_id, price, currency, in_stock, 
+                  availability_text, product_title, raw_data))
+            return cursor.lastrowid
             return False
