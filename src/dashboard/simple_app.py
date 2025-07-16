@@ -952,8 +952,9 @@ with st.sidebar.expander("System Information"):
     st.write("**SKUs Configured:** ", len(db_manager.get_active_skus()))
     st.write("**Retailers Configured:** ", len(db_manager.get_active_retailers()))
     st.write("**Last Updated:** ", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-    
-    # Debug section for persistence issues
+
+# Debug section for persistence issues (moved outside sidebar to avoid nesting)
+if page == "🚀 Scraping Control":
     with st.expander("🔧 Debug Information", expanded=False):
         st.write("**Database Information:**")
         col1, col2 = st.columns(2)
@@ -1005,6 +1006,10 @@ with st.sidebar.expander("System Information"):
         if st.button("🔄 Clear Streamlit Cache"):
             st.cache_resource.clear()
             st.success("Cache cleared! Please refresh the page.")
+
+def main():
+    """Main function to run the dashboard."""
+    pass  # All the dashboard code is already executed above
 
 if __name__ == "__main__":
     main()
