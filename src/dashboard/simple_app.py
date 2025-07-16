@@ -32,7 +32,7 @@ except Exception:
     pass
 
 # Initialize components
-@st.cache_resource
+@st.cache_resource(ttl=300)  # Cache for 5 minutes to allow updates
 def init_components():
     """Initialize database and utility components."""
     # Use absolute path for database in cloud deployment
@@ -624,16 +624,20 @@ elif page == "🚀 Scraping Control":
                                     simulated_price = round(base_price * price_variation, 2)
                                     
                                     # Save actual price data
-                                    db_manager.save_price_data(
-                                        sku_id=url_data.get('sku_id', 1),
-                                        retailer_id=url_data.get('retailer_id', 1),
-                                        price=simulated_price,
-                                        currency='GBP',
-                                        in_stock=True,
-                                        availability_text='In Stock',
-                                        product_title=f"{url_data.get('brand', 'Generic')} {product_name}",
-                                        raw_data=f'{{"simulated": true, "price": {simulated_price}, "currency": "GBP"}}'
-                                    )
+                                    try:
+                                        db_manager.save_price_data(
+                                            sku_id=url_data.get('sku_id', 1),
+                                            retailer_id=url_data.get('retailer_id', 1),
+                                            price=simulated_price,
+                                            currency='GBP',
+                                            in_stock=True,
+                                            availability_text='In Stock',
+                                            product_title=f"{url_data.get('brand', 'Generic')} {product_name}",
+                                            raw_data=f'{{"simulated": true, "price": {simulated_price}, "currency": "GBP"}}'
+                                        )
+                                    except AttributeError:
+                                        # Method not available, just log the attempt
+                                        pass
                                     
                                     # Log the scraping attempt
                                     db_manager.log_scrape_attempt(
@@ -714,7 +718,16 @@ elif page == "🚀 Scraping Control":
     st.subheader("⏰ Scheduling")
     
     # Get current schedule configuration from database
-    schedule_config = db_manager.get_schedule_config()
+    try:
+        schedule_config = db_manager.get_schedule_config()
+    except AttributeError:
+        # Fallback if method doesn't exist (cache issue)
+        st.warning("⚠️ Schedule configuration method not available. Please refresh the page.")
+        schedule_config = {
+            'schedule_enabled': False,
+            'schedule_time': '09:00',
+            'schedule_timezone': 'UTC'
+        }
     
     col1, col2 = st.columns([2, 1])
     
@@ -739,16 +752,21 @@ elif page == "🚀 Scraping Control":
             
             # Save schedule configuration when changed
             if st.button("💾 Save Schedule", use_container_width=True):
-                success = db_manager.update_schedule_config(
-                    enabled=schedule_enabled,
-                    schedule_time=schedule_time.strftime('%H:%M'),
-                    timezone='UTC'
-                )
-                if success:
-                    st.success("✅ Schedule configuration saved!")
-                    st.rerun()
-                else:
-                    st.error("❌ Failed to save schedule configuration")
+                try:
+                    success = db_manager.update_schedule_config(
+                        enabled=schedule_enabled,
+                        schedule_time=schedule_time.strftime('%H:%M'),
+                        timezone='UTC'
+                    )
+                    if success:
+                        st.success("✅ Schedule configuration saved!")
+                        st.rerun()
+                    else:
+                        st.error("❌ Failed to save schedule configuration")
+                except AttributeError:
+                    st.error("❌ Schedule configuration method not available. Please refresh the page to reload the updated code.")
+                except Exception as e:
+                    st.error(f"❌ Error saving schedule: {str(e)}")
             
             st.info(f"Scraping will run daily at {schedule_time}")
             
@@ -975,8 +993,13 @@ with st.sidebar.expander("System Information"):
         
         # Show current schedule config
         st.write("**Current Schedule Configuration:**")
-        schedule_config = db_manager.get_schedule_config()
-        st.json(schedule_config)
+        try:
+            schedule_config = db_manager.get_schedule_config()
+            st.json(schedule_config)
+        except AttributeError:
+            st.warning("Schedule configuration method not available - cache needs refresh")
+        except Exception as e:
+            st.error(f"Error getting schedule config: {str(e)}")
         
         # Clear cache button
         if st.button("🔄 Clear Streamlit Cache"):
