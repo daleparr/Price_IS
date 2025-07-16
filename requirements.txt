@@ -10,6 +10,7 @@ schedule==1.2.0
 # Optional dependencies for enhanced functionality
 requests==2.31.0
 beautifulsoup4==4.12.2
+fake-useragent==1.4.0
 
 # Development dependencies (optional)
 pytest==7.4.3

@@ -1,0 +1,12 @@
+Defaulting to user installation because normal site-packages is not writeable
+Collecting playwright
+  Downloading playwright-1.53.0-py3-none-win_amd64.whl.metadata (3.5 kB)
+Collecting pyee<14,>=13 (from playwright)
+  Downloading pyee-13.0.0-py3-none-any.whl.metadata (2.9 kB)
+Requirement already satisfied: greenlet<4.0.0,>=3.1.1 in c:\users\mrdpa\appdata\roaming\python\python313\site-packages (from playwright) (3.1.1)
+Requirement already satisfied: typing-extensions in c:\users\mrdpa\appdata\roaming\python\python313\site-packages (from pyee<14,>=13->playwright) (4.14.0)
+Downloading playwright-1.53.0-py3-none-win_amd64.whl (35.4 MB)
+   ---------------------------------------- 35.4/35.4 MB 14.6 MB/s eta 0:00:00
+Downloading pyee-13.0.0-py3-none-any.whl (15 kB)
+Installing collected packages: pyee, playwright
+Successfully installed playwright-1.53.0 pyee-13.0.0

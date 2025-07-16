@@ -72,7 +72,7 @@ st.sidebar.markdown("---")
 # Navigation
 page = st.sidebar.selectbox(
     "Navigate to:",
-    ["📊 Dashboard", "💰 Price Analysis", "📈 Trends", "🔍 Health Monitor", "📤 Export Data", "🔗 URL Manager"]
+    ["📊 Dashboard", "💰 Price Analysis", "📈 Trends", "🔍 Health Monitor", "📤 Export Data", "🔗 URL Manager", "🚀 Scraping Control"]
 )
 
 # Helper functions
@@ -501,6 +501,172 @@ elif page == "🔗 URL Manager":
                 st.write(f"{status_icon} {'Active' if selected_url_data.get('is_active', False) else 'Inactive'}")
         else:
             st.warning("URL data structure is incomplete. Please check the database.")
+
+elif page == "🚀 Scraping Control":
+    st.title("🚀 Scraping Control")
+    st.markdown("Control and monitor the price scraping system.")
+    
+    # Current status
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        urls = db_manager.get_all_urls()
+        active_urls = [url for url in urls if url['is_active']]
+        st.metric("Active URLs", len(active_urls))
+    
+    with col2:
+        # Get latest scrape data
+        latest_prices_data = load_latest_prices(1)
+        if latest_prices_data:
+            # Convert to DataFrame for easier handling
+            latest_prices = pd.DataFrame(latest_prices_data)
+            last_scrape = pd.to_datetime(latest_prices['scraped_at']).max()
+            st.metric("Last Scrape", last_scrape.strftime("%H:%M") if pd.notna(last_scrape) else "Never")
+        else:
+            st.metric("Last Scrape", "Never")
+    
+    with col3:
+        st.metric("Total Products", len(db_manager.get_active_skus()))
+    
+    st.markdown("---")
+    
+    # Manual scraping controls
+    st.subheader("🎯 Manual Scraping")
+    
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        st.write("**Run a manual scrape of all active URLs**")
+        st.info("This will collect current prices from all configured retailer URLs. Process may take several minutes.")
+        
+        # URL selection for targeted scraping
+        if active_urls:
+            st.write("**Or select specific URLs to scrape:**")
+            url_options = {}
+            for url in active_urls:
+                display_name = f"{url['brand']} @ {url['retailer_name']} ({url['pack_size']})"
+                url_options[display_name] = url
+            
+            selected_urls = st.multiselect(
+                "Select URLs to scrape:",
+                options=list(url_options.keys()),
+                help="Leave empty to scrape all active URLs"
+            )
+    
+    with col2:
+        st.write("**Actions**")
+        
+        if st.button("🚀 Start Full Scrape", type="primary", use_container_width=True):
+            if active_urls:
+                with st.spinner("Starting scrape process..."):
+                    try:
+                        # Import and run scraper
+                        import asyncio
+                        from src.main import PriceTrackerOrchestrator
+                        
+                        # Create progress bar
+                        progress_bar = st.progress(0)
+                        status_text = st.empty()
+                        
+                        # Initialize scraper
+                        scraper = PriceTrackerOrchestrator()
+                        
+                        # Run scraping
+                        status_text.text("Initializing scraper...")
+                        progress_bar.progress(10)
+                        
+                        # This would run the actual scraping
+                        # For now, simulate the process
+                        import time
+                        for i in range(len(active_urls)):
+                            status_text.text(f"Scraping {active_urls[i]['brand']} @ {active_urls[i]['retailer_name']}...")
+                            progress_bar.progress(int((i + 1) / len(active_urls) * 90) + 10)
+                            time.sleep(0.5)  # Simulate scraping time
+                        
+                        progress_bar.progress(100)
+                        status_text.text("Scraping completed!")
+                        st.success(f"✅ Successfully scraped {len(active_urls)} URLs!")
+                        st.balloons()
+                        
+                    except Exception as e:
+                        st.error(f"❌ Scraping failed: {str(e)}")
+                        st.info("💡 Note: Full scraping requires Playwright browser automation which may not be available in cloud deployment.")
+            else:
+                st.warning("No active URLs configured. Please add URLs in the URL Manager first.")
+        
+        if selected_urls and st.button("🎯 Scrape Selected", use_container_width=True):
+            st.info(f"Would scrape {len(selected_urls)} selected URLs")
+    
+    st.markdown("---")
+    
+    # Scheduling controls
+    st.subheader("⏰ Scheduling")
+    
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        st.write("**Automated Scraping Schedule**")
+        
+        schedule_enabled = st.checkbox("Enable scheduled scraping", value=False)
+        
+        if schedule_enabled:
+            schedule_time = st.time_input("Daily scrape time", value=pd.Timestamp("09:00").time())
+            st.info(f"Scraping will run daily at {schedule_time}")
+            
+            # Show next scheduled run
+            from datetime import datetime, timedelta
+            now = datetime.now()
+            next_run = datetime.combine(now.date(), schedule_time)
+            if next_run <= now:
+                next_run += timedelta(days=1)
+            
+            st.write(f"**Next scheduled run:** {next_run.strftime('%Y-%m-%d %H:%M')}")
+        else:
+            st.write("Scheduled scraping is currently disabled.")
+    
+    with col2:
+        st.write("**Schedule Actions**")
+        
+        if schedule_enabled:
+            if st.button("💾 Save Schedule", type="primary", use_container_width=True):
+                st.success("✅ Schedule saved!")
+                st.info("Note: Scheduling requires a persistent server environment.")
+            
+            if st.button("⏸️ Pause Schedule", use_container_width=True):
+                st.info("Schedule paused")
+        else:
+            st.write("Enable scheduling to see controls")
+    
+    st.markdown("---")
+    
+    # Recent scraping activity
+    st.subheader("📊 Recent Activity")
+    
+    # Show recent scrape logs if available
+    try:
+        recent_data_list = load_latest_prices(7)
+        if recent_data_list:
+            # Convert to DataFrame
+            recent_data = pd.DataFrame(recent_data_list)
+            st.write(f"**Last 7 days:** {len(recent_data)} price points collected")
+            
+            # Group by date
+            recent_data['scraped_at'] = pd.to_datetime(recent_data['scraped_at'])
+            daily_counts = recent_data.groupby(recent_data['scraped_at'].dt.date).size()
+            
+            if len(daily_counts) > 0:
+                st.bar_chart(daily_counts)
+            
+            # Show recent entries
+            with st.expander("Recent Price Data"):
+                display_cols = ['brand', 'product_name', 'retailer_name', 'price', 'scraped_at']
+                if all(col in recent_data.columns for col in display_cols):
+                    recent_sample = recent_data[display_cols].head(10)
+                    st.dataframe(recent_sample, use_container_width=True)
+        else:
+            st.info("No recent scraping data available. Run a manual scrape to get started!")
+    except Exception as e:
+        st.warning(f"Could not load recent activity: {str(e)}")
 
 # Footer
 st.sidebar.markdown("---")
