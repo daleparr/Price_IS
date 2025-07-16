@@ -19,13 +19,17 @@ from src.utils.export_manager import ExportManager
 from src.utils.health_monitor import HealthMonitor
 from src.utils.data_validator import DataQualityChecker
 
-# Page configuration
-st.set_page_config(
-    page_title="Price Tracker Dashboard",
-    page_icon="💊",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+# Page configuration (only if not already set)
+try:
+    st.set_page_config(
+        page_title="Price Tracker Dashboard",
+        page_icon="💊",
+        layout="wide",
+        initial_sidebar_state="expanded"
+    )
+except Exception:
+    # Page config already set by streamlit_app.py
+    pass
 
 # Initialize components
 @st.cache_resource

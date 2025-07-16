@@ -8,6 +8,14 @@ import streamlit as st
 import sys
 import os
 
+# Page configuration MUST be first
+st.set_page_config(
+    page_title="Price Tracker Dashboard",
+    page_icon="💊",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
 # Add the src directory to the Python path
 sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 
