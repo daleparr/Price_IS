@@ -19,6 +19,14 @@ from src.utils.export_manager import ExportManager
 from src.utils.health_monitor import HealthMonitor
 from src.utils.data_validator import DataQualityChecker
 
+# Handle optional scraping dependencies for cloud deployment
+try:
+    import playwright
+    SCRAPING_AVAILABLE = True
+except ImportError:
+    SCRAPING_AVAILABLE = False
+    st.info("ℹ️ Scraping functionality not available in this deployment. Dashboard-only mode.")
+
 # Page configuration
 st.set_page_config(
     page_title="Price Tracker Dashboard",
