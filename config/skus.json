@@ -1,0 +1,103 @@
+{
+  "skus": [
+    {
+      "id": 1,
+      "brand": "Flarin",
+      "product_name": "Flarin Joint & Muscular Pain Relief",
+      "pack_size": "12s",
+      "formulation": "200mg Ibuprofen",
+      "category": "Anti-inflammatory",
+      "active": true
+    },
+    {
+      "id": 2,
+      "brand": "Flarin",
+      "product_name": "Flarin Joint & Muscular Pain Relief",
+      "pack_size": "16s",
+      "formulation": "200mg Ibuprofen",
+      "category": "Anti-inflammatory",
+      "active": true
+    },
+    {
+      "id": 3,
+      "brand": "Anadin",
+      "product_name": "Anadin Original",
+      "pack_size": "12s",
+      "formulation": "Aspirin 325mg + Caffeine 15mg",
+      "category": "Analgesic",
+      "active": true
+    },
+    {
+      "id": 4,
+      "brand": "Anadin",
+      "product_name": "Anadin Joint Pain",
+      "pack_size": "16s",
+      "formulation": "Ibuprofen 200mg",
+      "category": "Anti-inflammatory",
+      "active": true
+    },
+    {
+      "id": 5,
+      "brand": "Nurofen",
+      "product_name": "Nurofen 8hr",
+      "pack_size": "8s",
+      "formulation": "256mg Ibuprofen",
+      "category": "Anti-inflammatory",
+      "active": true
+    },
+    {
+      "id": 6,
+      "brand": "Nurofen",
+      "product_name": "Nurofen Oral Suspension",
+      "pack_size": "100ml",
+      "formulation": "100mg/5ml Ibuprofen",
+      "category": "Anti-inflammatory",
+      "active": true
+    },
+    {
+      "id": 7,
+      "brand": "Nuromol",
+      "product_name": "Nuromol Dual Action",
+      "pack_size": "12s",
+      "formulation": "Ibuprofen 200mg + Paracetamol 500mg",
+      "category": "Combination",
+      "active": true
+    },
+    {
+      "id": 8,
+      "brand": "Panadol",
+      "product_name": "Panadol Original",
+      "pack_size": "16s",
+      "formulation": "Paracetamol 500mg",
+      "category": "Analgesic",
+      "active": true
+    },
+    {
+      "id": 9,
+      "brand": "Voltarol",
+      "product_name": "Voltarol Pain-eze",
+      "pack_size": "12s",
+      "formulation": "Diclofenac 12.5mg",
+      "category": "Anti-inflammatory",
+      "active": true
+    },
+    {
+      "id": 10,
+      "brand": "Ibuleve",
+      "product_name": "Ibuleve Speed Relief Gel",
+      "pack_size": "40g",
+      "formulation": "5% Ibuprofen",
+      "category": "Topical",
+      "active": true
+    },
+    {
+      "id": 11,
+      "brand": "Solpadeine",
+      "product_name": "Solpadeine Plus",
+      "pack_size": "12s",
+      "formulation": "Paracetamol 500mg + Codeine 8mg + Caffeine 30mg",
+      "category": "Combination",
+      "active": true
+    }
+  ]
+}

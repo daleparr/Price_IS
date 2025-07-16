@@ -1,0 +1,130 @@
+{
+  "retailers": [
+    {
+      "id": 1,
+      "name": "Tesco",
+      "base_url": "https://www.tesco.com",
+      "scraper_module": "tesco_scraper",
+      "selectors": {
+        "price": "[data-testid='price-details'] .value",
+        "price_alt": ".price-per-sellable-unit .value",
+        "availability": "[data-testid='product-availability']",
+        "product_title": "[data-testid='product-title']"
+      },
+      "wait_selectors": ["[data-testid='price-details']"],
+      "active": true
+    },
+    {
+      "id": 2,
+      "name": "Sainsburys",
+      "base_url": "https://www.sainsburys.co.uk",
+      "scraper_module": "sainsburys_scraper",
+      "selectors": {
+        "price": ".pd__cost__retail-price",
+        "price_alt": ".pricing__now-price",
+        "availability": ".pd__cost__availability",
+        "product_title": ".pd__header__title"
+      },
+      "wait_selectors": [".pd__cost__retail-price"],
+      "active": true
+    },
+    {
+      "id": 3,
+      "name": "Morrisons",
+      "base_url": "https://groceries.morrisons.com",
+      "scraper_module": "morrisons_scraper",
+      "selectors": {
+        "price": ".bop-price__current",
+        "price_alt": ".price-current",
+        "availability": ".bop-catchweight__availability",
+        "product_title": ".bop-title__text"
+      },
+      "wait_selectors": [".bop-price__current"],
+      "active": true
+    },
+    {
+      "id": 4,
+      "name": "Boots",
+      "base_url": "https://www.boots.com",
+      "scraper_module": "boots_scraper",
+      "selectors": {
+        "price": ".product_price .price_current",
+        "price_alt": ".estore_price .price",
+        "availability": ".product_availability",
+        "product_title": ".product_name h1"
+      },
+      "wait_selectors": [".product_price"],
+      "active": true
+    },
+    {
+      "id": 5,
+      "name": "Wilko",
+      "base_url": "https://www.wilko.com",
+      "scraper_module": "wilko_scraper",
+      "selectors": {
+        "price": ".price-current",
+        "price_alt": ".product-price .price",
+        "availability": ".stock-status",
+        "product_title": ".product-title h1"
+      },
+      "wait_selectors": [".price-current"],
+      "active": true
+    },
+    {
+      "id": 6,
+      "name": "Superdrug",
+      "base_url": "https://www.superdrug.com",
+      "scraper_module": "superdrug_scraper",
+      "selectors": {
+        "price": ".price .price-current",
+        "price_alt": ".product-price .current-price",
+        "availability": ".availability-message",
+        "product_title": ".product-name h1"
+      },
+      "wait_selectors": [".price"],
+      "active": true
+    },
+    {
+      "id": 7,
+      "name": "Waitrose",
+      "base_url": "https://www.waitrose.com",
+      "scraper_module": "waitrose_scraper",
+      "selectors": {
+        "price": ".price-current",
+        "price_alt": ".product-price .price",
+        "availability": ".availability",
+        "product_title": ".product-title"
+      },
+      "wait_selectors": [".price-current"],
+      "active": true
+    },
+    {
+      "id": 8,
+      "name": "Ocado",
+      "base_url": "https://www.ocado.com",
+      "scraper_module": "ocado_scraper",
+      "selectors": {
+        "price": ".current-price",
+        "price_alt": ".price-current .price",
+        "availability": ".availability-text",
+        "product_title": ".product-title h1"
+      },
+      "wait_selectors": [".current-price"],
+      "active": true
+    },
+    {
+      "id": 9,
+      "name": "Amazon",
+      "base_url": "https://www.amazon.co.uk",
+      "scraper_module": "amazon_scraper",
+      "selectors": {
+        "price": ".a-price-whole",
+        "price_alt": "#price_inside_buybox",
+        "availability": "#availability span",
+        "product_title": "#productTitle"
+      },
+      "wait_selectors": [".a-price"],
+      "active": true
+    }
+  ]
+}

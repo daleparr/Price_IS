@@ -1,0 +1,18 @@
+# Core dependencies
+playwright==1.40.0
+pandas==2.1.4
+streamlit==1.29.0
+schedule==1.2.0
+openpyxl==3.1.2
+python-dotenv==1.0.0
+
+# Development dependencies
+pytest==7.4.3
+pytest-asyncio==0.21.1
+black==23.11.0
+flake8==6.1.0
+
+# Optional dependencies for enhanced functionality
+requests==2.31.0
+beautifulsoup4==4.12.2
+fake-useragent==1.4.0
