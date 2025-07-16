@@ -540,6 +540,7 @@ elif page == "🚀 Scraping Control":
         st.info("This will collect current prices from all configured retailer URLs. Process may take several minutes.")
         
         # URL selection for targeted scraping
+        selected_urls = []  # Initialize to avoid NameError
         if active_urls:
             st.write("**Or select specific URLs to scrape:**")
             url_options = {}
