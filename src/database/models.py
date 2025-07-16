@@ -182,6 +182,21 @@ class DatabaseManager:
                 VALUES (?, ?, ?, ?, ?, ?)
             """, (sku_id, retailer_id, status, error_message, response_time, user_agent))
             return cursor.lastrowid
+    
+    def get_scrape_logs(self, days: int = 7, limit: int = 100) -> List[Dict[str, Any]]:
+        """Get recent scrape logs with SKU and retailer details."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT sl.*, sc.brand, sc.product_name, rc.name as retailer_name
+                FROM scrape_logs sl
+                LEFT JOIN sku_config sc ON sl.sku_id = sc.id
+                LEFT JOIN retailer_config rc ON sl.retailer_id = rc.id
+                WHERE sl.scraped_at >= datetime('now', '-{} days')
+                ORDER BY sl.scraped_at DESC
+                LIMIT ?
+            """.format(days), (limit,))
+            return [dict(row) for row in cursor.fetchall()]
             
     def get_active_skus(self) -> List[Dict[str, Any]]:
         """Get all active SKUs."""

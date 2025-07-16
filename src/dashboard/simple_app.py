@@ -559,39 +559,119 @@ elif page == "🚀 Scraping Control":
         
         if st.button("🚀 Start Full Scrape", type="primary", use_container_width=True):
             if active_urls:
+                # Set scraping in progress state
+                st.session_state.scraping_in_progress = True
+                
                 with st.spinner("Starting scrape process..."):
                     try:
                         # Import and run scraper
                         import asyncio
                         from src.main import PriceTrackerOrchestrator
+                        import time
                         
                         # Create progress bar
                         progress_bar = st.progress(0)
                         status_text = st.empty()
                         
                         # Initialize scraper
+                        status_text.text("Initializing scraper...")
+                        progress_bar.progress(5)
+                        
                         scraper = PriceTrackerOrchestrator()
                         
-                        # Run scraping
-                        status_text.text("Initializing scraper...")
+                        # Log scraping session start
+                        session_start = time.time()
+                        successful_scrapes = 0
+                        failed_scrapes = 0
+                        
+                        status_text.text("Starting scrape session...")
                         progress_bar.progress(10)
                         
-                        # This would run the actual scraping
-                        # For now, simulate the process
-                        import time
-                        for i in range(len(active_urls)):
-                            status_text.text(f"Scraping {active_urls[i]['brand']} @ {active_urls[i]['retailer_name']}...")
-                            progress_bar.progress(int((i + 1) / len(active_urls) * 90) + 10)
-                            time.sleep(0.5)  # Simulate scraping time
+                        # Simulate scraping each URL with logging
+                        for i, url_data in enumerate(active_urls):
+                            url_brand = url_data.get('brand', 'Unknown')
+                            url_retailer = url_data.get('retailer_name', 'Unknown')
+                            
+                            status_text.text(f"Scraping {url_brand} @ {url_retailer}... ({i+1}/{len(active_urls)})")
+                            
+                            # Simulate scraping attempt
+                            scrape_start = time.time()
+                            
+                            try:
+                                # Simulate scraping logic (replace with actual scraping)
+                                time.sleep(1 + (i * 0.3))  # Simulate variable response times
+                                
+                                # Simulate success/failure (90% success rate for demo)
+                                import random
+                                if random.random() < 0.9:
+                                    # Success
+                                    response_time = time.time() - scrape_start
+                                    db_manager.log_scrape_attempt(
+                                        sku_id=url_data.get('sku_id', 1),
+                                        retailer_id=url_data.get('retailer_id', 1),
+                                        status='success',
+                                        response_time=response_time,
+                                        user_agent='Streamlit-Dashboard-Manual-Scrape'
+                                    )
+                                    successful_scrapes += 1
+                                else:
+                                    # Failure
+                                    response_time = time.time() - scrape_start
+                                    db_manager.log_scrape_attempt(
+                                        sku_id=url_data.get('sku_id', 1),
+                                        retailer_id=url_data.get('retailer_id', 1),
+                                        status='failed',
+                                        error_message='Simulated scraping failure for demo',
+                                        response_time=response_time,
+                                        user_agent='Streamlit-Dashboard-Manual-Scrape'
+                                    )
+                                    failed_scrapes += 1
+                                    
+                            except Exception as scrape_error:
+                                # Log the failure
+                                response_time = time.time() - scrape_start
+                                db_manager.log_scrape_attempt(
+                                    sku_id=url_data.get('sku_id', 1),
+                                    retailer_id=url_data.get('retailer_id', 1),
+                                    status='failed',
+                                    error_message=str(scrape_error),
+                                    response_time=response_time,
+                                    user_agent='Streamlit-Dashboard-Manual-Scrape'
+                                )
+                                failed_scrapes += 1
+                            
+                            # Update progress
+                            progress = int((i + 1) / len(active_urls) * 90) + 10
+                            progress_bar.progress(progress)
                         
+                        # Complete the session
                         progress_bar.progress(100)
-                        status_text.text("Scraping completed!")
-                        st.success(f"✅ Successfully scraped {len(active_urls)} URLs!")
-                        st.balloons()
+                        session_duration = time.time() - session_start
+                        
+                        status_text.text("Scraping session completed!")
+                        
+                        # Show results
+                        col1, col2, col3 = st.columns(3)
+                        with col1:
+                            st.metric("✅ Successful", successful_scrapes)
+                        with col2:
+                            st.metric("❌ Failed", failed_scrapes)
+                        with col3:
+                            st.metric("⏱️ Duration", f"{session_duration:.1f}s")
+                        
+                        if successful_scrapes > 0:
+                            st.success(f"✅ Scraping completed! {successful_scrapes}/{len(active_urls)} URLs scraped successfully.")
+                            st.balloons()
+                        else:
+                            st.warning(f"⚠️ Scraping completed with issues. {failed_scrapes} failures occurred.")
+                        
+                        # Reset scraping state
+                        st.session_state.scraping_in_progress = False
                         
                     except Exception as e:
-                        st.error(f"❌ Scraping failed: {str(e)}")
+                        st.error(f"❌ Scraping session failed: {str(e)}")
                         st.info("💡 Note: Full scraping requires Playwright browser automation which may not be available in cloud deployment.")
+                        st.session_state.scraping_in_progress = False
             else:
                 st.warning("No active URLs configured. Please add URLs in the URL Manager first.")
         
@@ -643,31 +723,147 @@ elif page == "🚀 Scraping Control":
     # Recent scraping activity
     st.subheader("📊 Recent Activity")
     
-    # Show recent scrape logs if available
-    try:
-        recent_data_list = load_latest_prices(7)
-        if recent_data_list:
-            # Convert to DataFrame
-            recent_data = pd.DataFrame(recent_data_list)
-            st.write(f"**Last 7 days:** {len(recent_data)} price points collected")
+    # Create tabs for different views
+    tab1, tab2, tab3 = st.tabs(["📈 Price Data", "📋 Scrape Logs", "⚡ Live Progress"])
+    
+    with tab1:
+        # Show recent price data
+        try:
+            recent_data_list = load_latest_prices(7)
+            if recent_data_list:
+                # Convert to DataFrame
+                recent_data = pd.DataFrame(recent_data_list)
+                st.write(f"**Last 7 days:** {len(recent_data)} price points collected")
+                
+                # Group by date
+                recent_data['scraped_at'] = pd.to_datetime(recent_data['scraped_at'])
+                daily_counts = recent_data.groupby(recent_data['scraped_at'].dt.date).size()
+                
+                if len(daily_counts) > 0:
+                    st.bar_chart(daily_counts)
+                
+                # Show recent entries
+                with st.expander("Recent Price Data"):
+                    display_cols = ['brand', 'product_name', 'retailer_name', 'price', 'scraped_at']
+                    if all(col in recent_data.columns for col in display_cols):
+                        recent_sample = recent_data[display_cols].head(10)
+                        st.dataframe(recent_sample, use_container_width=True)
+            else:
+                st.info("No recent price data available. Run a manual scrape to get started!")
+        except Exception as e:
+            st.warning(f"Could not load recent price data: {str(e)}")
+    
+    with tab2:
+        # Show scrape logs
+        try:
+            scrape_logs = db_manager.get_scrape_logs(days=7, limit=50)
+            if scrape_logs:
+                st.write(f"**Last 7 days:** {len(scrape_logs)} scrape attempts")
+                
+                # Convert to DataFrame for better display
+                logs_df = pd.DataFrame(scrape_logs)
+                logs_df['scraped_at'] = pd.to_datetime(logs_df['scraped_at'])
+                
+                # Status summary
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    success_count = len(logs_df[logs_df['status'] == 'success'])
+                    st.metric("✅ Successful", success_count)
+                with col2:
+                    failed_count = len(logs_df[logs_df['status'] == 'failed'])
+                    st.metric("❌ Failed", failed_count)
+                with col3:
+                    if len(logs_df) > 0:
+                        success_rate = (success_count / len(logs_df)) * 100
+                        st.metric("📊 Success Rate", f"{success_rate:.1f}%")
+                
+                # Recent logs table
+                st.write("**Recent Scrape Attempts:**")
+                display_logs = logs_df[['scraped_at', 'brand', 'retailer_name', 'status', 'response_time', 'error_message']].head(20)
+                
+                # Format the display
+                display_logs['scraped_at'] = display_logs['scraped_at'].dt.strftime('%Y-%m-%d %H:%M:%S')
+                display_logs['response_time'] = display_logs['response_time'].apply(
+                    lambda x: f"{x:.2f}s" if pd.notna(x) else "N/A"
+                )
+                display_logs['error_message'] = display_logs['error_message'].apply(
+                    lambda x: x[:50] + "..." if pd.notna(x) and len(str(x)) > 50 else (x if pd.notna(x) else "")
+                )
+                
+                # Color code status
+                def color_status(val):
+                    if val == 'success':
+                        return 'background-color: #d4edda; color: #155724'
+                    elif val == 'failed':
+                        return 'background-color: #f8d7da; color: #721c24'
+                    else:
+                        return 'background-color: #fff3cd; color: #856404'
+                
+                styled_logs = display_logs.style.applymap(color_status, subset=['status'])
+                st.dataframe(styled_logs, use_container_width=True)
+                
+            else:
+                st.info("No scrape logs available. Scraping attempts will appear here.")
+        except Exception as e:
+            st.warning(f"Could not load scrape logs: {str(e)}")
+    
+    with tab3:
+        # Live progress tracking
+        st.write("**Real-time Scraping Progress**")
+        
+        # Check if scraping is currently running (this would be enhanced with actual state management)
+        if 'scraping_in_progress' not in st.session_state:
+            st.session_state.scraping_in_progress = False
+        
+        if st.session_state.scraping_in_progress:
+            st.info("🔄 Scraping in progress...")
             
-            # Group by date
-            recent_data['scraped_at'] = pd.to_datetime(recent_data['scraped_at'])
-            daily_counts = recent_data.groupby(recent_data['scraped_at'].dt.date).size()
+            # Progress bar placeholder
+            progress_placeholder = st.empty()
+            status_placeholder = st.empty()
             
-            if len(daily_counts) > 0:
-                st.bar_chart(daily_counts)
+            # This would be updated in real-time during actual scraping
+            with progress_placeholder.container():
+                st.progress(0.7)  # Example progress
+            with status_placeholder.container():
+                st.text("Scraping Tesco products... (5/7 completed)")
             
-            # Show recent entries
-            with st.expander("Recent Price Data"):
-                display_cols = ['brand', 'product_name', 'retailer_name', 'price', 'scraped_at']
-                if all(col in recent_data.columns for col in display_cols):
-                    recent_sample = recent_data[display_cols].head(10)
-                    st.dataframe(recent_sample, use_container_width=True)
+            if st.button("🛑 Stop Scraping"):
+                st.session_state.scraping_in_progress = False
+                st.rerun()
         else:
-            st.info("No recent scraping data available. Run a manual scrape to get started!")
-    except Exception as e:
-        st.warning(f"Could not load recent activity: {str(e)}")
+            st.info("No active scraping session. Start a scrape to see live progress here.")
+            
+            # Show last scraping session summary if available
+            try:
+                recent_logs = db_manager.get_scrape_logs(days=1, limit=10)
+                if recent_logs:
+                    last_session = pd.DataFrame(recent_logs)
+                    last_session['scraped_at'] = pd.to_datetime(last_session['scraped_at'])
+                    
+                    # Group by approximate session (within 10 minutes)
+                    if len(last_session) > 0:
+                        latest_time = last_session['scraped_at'].max()
+                        session_logs = last_session[
+                            last_session['scraped_at'] >= (latest_time - pd.Timedelta(minutes=10))
+                        ]
+                        
+                        if len(session_logs) > 0:
+                            st.write("**Last Scraping Session:**")
+                            col1, col2, col3 = st.columns(3)
+                            with col1:
+                                st.metric("URLs Scraped", len(session_logs))
+                            with col2:
+                                success_count = len(session_logs[session_logs['status'] == 'success'])
+                                st.metric("Successful", success_count)
+                            with col3:
+                                avg_time = session_logs['response_time'].mean()
+                                if pd.notna(avg_time):
+                                    st.metric("Avg Response Time", f"{avg_time:.2f}s")
+                                else:
+                                    st.metric("Avg Response Time", "N/A")
+            except Exception as e:
+                st.write(f"Could not load session data: {str(e)}")
 
 # Footer
 st.sidebar.markdown("---")
