@@ -19,40 +19,30 @@ st.set_page_config(
 # Add the src directory to the Python path
 sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 
-# Test basic functionality first
-st.title("🏥 Price Tracker Dashboard")
-st.write("Testing basic functionality...")
-
+# Initialize database and components
 try:
-    # Test imports one by one
-    st.write("✅ Basic imports working")
-    
     from database.models import DatabaseManager
-    st.write("✅ Database models imported")
+    from database.migrations import populate_initial_data
     
-    from utils.export_manager import ExportManager
-    st.write("✅ Export manager imported")
-    
-    from utils.health_monitor import HealthMonitor
-    st.write("✅ Health monitor imported")
-    
-    from utils.data_validator import DataQualityChecker
-    st.write("✅ Data validator imported")
-    
-    # Test database initialization
+    # Initialize database
     db_manager = DatabaseManager()
-    st.write("✅ Database manager created")
-    
-    # Test database operations
     db_manager.create_tables()
-    st.write("✅ Database tables created")
     
-    # Import and run the full dashboard
-    st.write("🚀 Loading full dashboard...")
-    import dashboard.simple_app
+    # Check if we need to populate initial data
+    retailers = db_manager.get_active_retailers()
+    if len(retailers) == 0:
+        populate_initial_data(db_manager)
+        st.success("✅ Database initialized with configuration data")
+    
+    # Now import and run the full dashboard
+    # Clear any previous content first
+    st.empty()
+    
+    # Import the dashboard module - this will execute all the dashboard code
+    exec(open('src/dashboard/simple_app.py').read())
     
 except Exception as e:
-    st.error(f"❌ Error: {str(e)}")
+    st.error(f"❌ Error initializing dashboard: {str(e)}")
     st.write("**Traceback:**")
     import traceback
     st.code(traceback.format_exc())
